@@ -7,6 +7,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export interface Problem {
   question: string;
+  options: string[];
   answer: string;
   explanation: string;
 }
@@ -27,19 +28,21 @@ export async function generateProblem(selection: Selection): Promise<Problem | n
     - Unit: ${selection.unit}
     ${selection.subUnit ? `- Sub-unit: ${selection.subUnit}` : ''}
 
-    Your task is to generate a single, appropriate math problem based on this unit${selection.subUnit ? ' and sub-unit' : ''}.
+    Your task is to generate a single, appropriate multiple-choice math problem with 5 options based on this unit${selection.subUnit ? ' and sub-unit' : ''}.
+    One of the options must be the correct answer, and the other four should be plausible distractors.
 
     The output MUST be a JSON object with the following structure:
     {
       "question": "The text of the math problem in Korean. Include appropriate formatting like line breaks for readability.",
-      "answer": "The numerical or short-form answer. Just the answer itself.",
+      "options": ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5"],
+      "answer": "The correct answer, which must be one of the strings from the 'options' array.",
       "explanation": "A clear, step-by-step explanation of how to solve the problem in Korean."
     }
 
     Do not include any text, markdown formatting, or code block syntax outside of the JSON object itself.
-    The problem should be a typical question that a student of this level would encounter in their textbook or exam.
+    The problem should be a typical question that a student of this level would encounter in their textbook or exam. The options should be shuffled randomly.
 
-    IMPORTANT: The mathematical expressions in the "question" and "explanation" must be written in a way that is easy for a young student to understand. Use simple text-based notation (e.g., use 'x * 2' instead of '2x', '6 / x' instead of fractions). Do not use LaTeX or other complex mathematical formatting like '$$...$$'.
+    IMPORTANT: The mathematical expressions in the "question", "options", and "explanation" must be written in a way that is easy for a young student to understand. Use simple text-based notation (e.g., use 'x * 2' instead of '2x', '6 / x' instead of fractions). Do not use LaTeX or other complex mathematical formatting like '$$...$$'.
   `;
 
   try {

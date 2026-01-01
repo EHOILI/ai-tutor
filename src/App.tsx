@@ -34,7 +34,6 @@ function App() {
   ]);
   const [currentProblem, setCurrentProblem] = useState<Problem | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [userAnswer, setUserAnswer] = useState<string>('');
   const [isHomeworkExplanationMode, setIsHomeworkExplanationMode] = useState<boolean>(false);
   const [homeworkProblemInput, setHomeworkProblemInput] = useState<string>('');
 
@@ -128,20 +127,18 @@ function App() {
     }
   };
 
-  const handleAnswerSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentProblem || userAnswer.trim() === '') return;
+  const handleAnswerSubmit = (selectedOption: string) => {
+    if (!currentProblem) return;
 
-    addMessageToChat({ sender: 'user', text: userAnswer });
-    // Simple answer check, can be improved
-    if (userAnswer.trim() === currentProblem.answer) {
+    addMessageToChat({ sender: 'user', text: selectedOption });
+
+    if (selectedOption === currentProblem.answer) {
       const newCoins = coins + 100;
       setCoins(newCoins);
       addMessageToChat({ sender: 'system', text: '정답입니다! 100 코인을 획득했습니다.' });
     } else {
-      addMessageToChat({ sender: 'system', text: '오답입니다. 다시 시도해보세요.' });
+      addMessageToChat({ sender: 'system', text: `오답입니다. 정답은 "${currentProblem.answer}"입니다.` });
     }
-    setUserAnswer('');
     setCurrentProblem(null); // Allow user to request a new problem
   };
 
@@ -179,8 +176,6 @@ function App() {
               explanationTickets={explanationTickets}
               chatHistory={chatHistory}
               isLoading={isLoading}
-              userAnswer={userAnswer}
-              onUserAnswerChange={(e) => setUserAnswer(e.target.value)}
               onRequestProblem={handleRequestProblem}
               onAnswerSubmit={handleAnswerSubmit}
               onPurchaseExplanationTicket={handlePurchaseExplanationTicket}
@@ -197,5 +192,6 @@ function App() {
     </>
   );
 }
+
 
 export default App;

@@ -9,10 +9,8 @@ interface Props {
   explanationTickets: number;
   chatHistory: ChatMessage[];
   isLoading: boolean;
-  userAnswer: string;
-  onUserAnswerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRequestProblem: () => void;
-  onAnswerSubmit: (e: React.FormEvent) => void;
+  onAnswerSubmit: (selectedOption: string) => void;
   onPurchaseExplanationTicket: () => void;
   onUseExplanationTicket: () => void;
   isHomeworkExplanationMode: boolean;
@@ -28,8 +26,6 @@ const TutorView: React.FC<Props> = ({
   explanationTickets,
   chatHistory,
   isLoading,
-  userAnswer,
-  onUserAnswerChange,
   onRequestProblem,
   onAnswerSubmit,
   onPurchaseExplanationTicket,
@@ -91,23 +87,21 @@ const TutorView: React.FC<Props> = ({
               </Col>
             </Row>
           </Form>
+        ) : currentProblem ? (
+          <div className="d-grid gap-2">
+            {currentProblem.options.map((option, index) => (
+              <Button
+                key={index}
+                variant="outline-primary"
+                onClick={() => onAnswerSubmit(option)}
+                disabled={isLoading}
+              >
+                {index + 1}. {option}
+              </Button>
+            ))}
+          </div>
         ) : (
-          <Form onSubmit={onAnswerSubmit}>
-            <Row className="align-items-center">
-              <Col>
-                <Form.Control
-                  type="text"
-                  placeholder={currentProblem ? "정답을 입력하세요..." : "먼저 문제를 받아주세요."}
-                  value={userAnswer}
-                  onChange={onUserAnswerChange}
-                  disabled={!currentProblem || isLoading}
-                />
-              </Col>
-              <Col xs="auto">
-                <Button type="submit" disabled={!currentProblem || isLoading || userAnswer.trim() === ''}>답안 제출</Button>
-              </Col>
-            </Row>
-          </Form>
+          <div className="text-center text-muted">먼저 '문제 받기' 버튼을 눌러 문제를 생성해주세요.</div>
         )}
         <hr />
         <Row>
