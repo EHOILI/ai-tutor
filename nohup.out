@@ -1,0 +1,36 @@
+
+> ai-tutor@0.0.0 dev
+> vite
+
+
+  ROLLDOWN-VITE v7.2.5  ready in 78 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+오후 10:08:28 [vite] (client) hmr update /src/App.tsx
+오후 10:08:33 [vite] (client) hmr update /src/components/CurriculumSelector.tsx
+오후 10:08:38 [vite] (client) hmr update /src/components/TutorView.tsx
+오후 10:10:24 [vite] (client) hmr update /src/App.tsx
+오후 10:11:47 [vite] (client) page reload src/main.tsx
+오후 10:13:24 [vite] (client) hmr update /src/App.tsx
+오후 10:16:49 [vite] (client) hmr update /src/App.tsx
+오후 10:20:38 [vite] (client) hmr update /src/App.tsx
+
+> ai-tutor@0.0.0 dev
+> vite --force
+
+오후 9:50:29 [vite] (client) Forced re-optimization of dependencies
+
+  ROLLDOWN-VITE v7.2.5  ready in 97 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+
+> ai-tutor@0.0.0 dev
+> vite
+
+
+  ROLLDOWN-VITE v7.2.5  ready in 81 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
