@@ -1,8 +1,8 @@
 
-require('dotenv').config();
-const express = require('express');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const cors = require('cors');
+import 'dotenv/config';
+import express from 'express';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import cors from 'cors';
 
 const app = express();
 
@@ -90,4 +90,4 @@ app.post('/api/explain', async (req, res) => {
 
 // Vercel 환경에서는 app.listen()이 필요 없습니다.
 // module.exports를 통해 express 앱을 내보냅니다.
-module.exports = app;
+export default app;
