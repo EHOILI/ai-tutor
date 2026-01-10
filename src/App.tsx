@@ -27,7 +27,7 @@ function App() {
     unit: '',
     subUnit: '',
   });
-  const [coins, setCoins] = useState<number>(100);
+  const [coins, setCoins] = useState<number>(0);
   const [explanationTickets, setExplanationTickets] = useState<number>(0);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     { sender: 'system', text: '좌측 메뉴에서 학습할 과정을 선택하고 문제 받기 버튼을 눌러주세요.' }

@@ -1,15 +1,12 @@
 // src/geminiService.ts
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Selection } from "./App";
 
-const API_KEY = "AIzaSyDQEewmxcocA1pTY7CwJ4xHvx7HdGXcJGE";
-const genAI = new GoogleGenerativeAI(API_KEY);
+const API_BASE_URL = '';
 
 export interface Problem {
   question: string;
   options: string[];
   answer: string;
-  explanation: string;
 }
 
 export async function generateProblem(selection: Selection): Promise<Problem | null> {
@@ -17,89 +14,54 @@ export async function generateProblem(selection: Selection): Promise<Problem | n
     return null;
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ selection }),
+    });
 
-  const prompt = `
-    You are a helpful and engaging AI tutor for a South Korean student.
-    The student has selected the following curriculum:
-    - School Level: ${selection.school}
-    - Grade: ${selection.grade}
-    - Semester: ${selection.semester}
-    - Unit: ${selection.unit}
-    ${selection.subUnit ? `- Sub-unit: ${selection.subUnit}` : ''}
-
-    Your task is to generate a single, appropriate multiple-choice math problem with 5 options based on this unit${selection.subUnit ? ' and sub-unit' : ''}.
-    One of the options must be the correct answer, and the other four should be plausible distractors.
-
-    The output MUST be a JSON object with the following structure:
-    {
-      "question": "The text of the math problem in Korean. Include appropriate formatting like line breaks for readability.",
-      "options": ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5"],
-      "answer": "The correct answer, which must be one of the strings from the 'options' array.",
-      "explanation": "A clear, step-by-step explanation of how to solve the problem in Korean."
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error from server:", errorData.error);
+      throw new Error(`Server responded with ${response.status}`);
     }
 
-    Do not include any text, markdown formatting, or code block syntax outside of the JSON object itself.
-    The problem should be a typical question that a student of this level would encounter in their textbook or exam. The options should be shuffled randomly.
-
-    IMPORTANT: The mathematical expressions in the "question", "options", and "explanation" must be written in a way that is easy for a young student to understand. Use simple text-based notation (e.g., use 'x * 2' instead of '2x', '6 / x' instead of fractions). Do not use LaTeX or other complex mathematical formatting like '$$...$$'.
-  `;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = await response.text();
-    
-    // Clean the text in case the model wraps it in markdown ```json ... ```
-    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    const parsed: Problem = JSON.parse(cleanedText);
-    return parsed;
+    const problem: Problem = await response.json();
+    return problem;
   } catch (error) {
     console.error("Error generating problem:", error);
     return null;
   }
 }
 
-export async function generateExplanationForHomework(homeworkProblem: string): Promise<string | null> {
-  if (!homeworkProblem.trim()) {
+export async function generateExplanationForHomework(problem: string): Promise<string | null> {
+  if (!problem.trim()) {
     return null;
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/explain`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ problem }),
+    });
 
-  const prompt = `
-    You are a helpful and engaging AI tutor for a South Korean student.
-    The student has provided a homework problem and needs a detailed, step-by-step explanation to understand how to solve it.
-
-    Here is the homework problem:
-    "${homeworkProblem}"
-
-    Your task is to provide a clear and comprehensive step-by-step explanation of how to solve this problem in Korean.
-    The explanation should be easy to follow for a student.
-
-    The output MUST be a JSON object with the following structure:
-    {
-      "explanation": "A clear, step-by-step explanation of how to solve the homework problem in Korean."
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Error from server:", errorData.error);
+      throw new Error(`Server responded with ${response.status}`);
     }
 
-    Do not include any text, markdown formatting, or code block syntax outside of the JSON object itself.
-
-    IMPORTANT: The mathematical expressions in the "explanation" must be written in a way that is easy for a student to understand. Use simple text-based notation (e.g., use 'x * 2' instead of '2x', '6 / x' instead of fractions). Do not use LaTeX or other complex mathematical formatting like '$$...$$'.
-  `;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = await response.text();
-    
-    // Clean the text in case the model wraps it in markdown ```json ... ```
-    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    const parsed: { explanation: string } = JSON.parse(cleanedText);
-    return parsed.explanation;
+    const data: { explanation: string } = await response.json();
+    return data.explanation;
   } catch (error) {
     console.error("Error generating explanation for homework:", error);
     return null;
   }
 }
+
