@@ -9,16 +9,19 @@ const app = express();
 // CORS 설정
 const allowedOrigins = [
   'http://localhost:5173', // Vite 개발 서버
+  'https://ehoili.github.io', // GitHub Pages 배포
   // Vercel 배포 시에는 process.env.VERCEL_URL이 자동으로 설정됩니다.
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
 ].filter(Boolean); // undefined 값을 제거합니다.
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log(`[CORS] Request from origin: ${origin}`);
     // origin이 undefined인 경우 (예: 서버-사이드 요청) 또는 허용된 목록에 있는 경우 허용
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error(`[CORS] Blocked origin: ${origin}. Not in allowed list:`, allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   }
