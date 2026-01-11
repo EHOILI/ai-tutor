@@ -38,9 +38,11 @@ if (!apiKey) {
 }
 const genAI = new GoogleGenerativeAI(apiKey);
 
+// --- Caching and Batch Generation Logic ---
+const problemCache = new Map();
+const CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+
 // POST /api/generate 엔드포인트
-// Vercel은 파일 기반 라우팅을 사용하므로, 이 파일은 /api/server 로 접근됩니다.
-// vercel.json의 rewrite 설정에 따라 /api/generate 요청이 이리로 전달됩니다.
 app.post('/api/generate', async (req, res) => {
   const { selection } = req.body;
 
@@ -48,19 +50,59 @@ app.post('/api/generate', async (req, res) => {
     return res.status(400).json({ error: 'Selection data is required.' });
   }
 
+  const cacheKey = `${selection.school}-${selection.grade}-${selection.semester}-${selection.unit}-${selection.subUnit || ''}`;
+  const cachedEntry = problemCache.get(cacheKey);
+
+  // 1. Check for valid cache entry
+  if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_DURATION_MS) {
+    const problem = cachedEntry.problems.pop();
+    if (problem) {
+      console.log(`[Cache] Serving problem from cache for key: ${cacheKey}`);
+      // If the cache is now empty, remove it.
+      if (cachedEntry.problems.length === 0) {
+        problemCache.delete(cacheKey);
+      }
+      return res.json(problem);
+    }
+  }
+  
+  // 2. If no valid cache, fetch a new batch from the API
+  console.log(`[API] No cache found. Fetching new batch for key: ${cacheKey}`);
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-    const prompt = `Create a multiple-choice math problem based on the following topic: ${selection.unit} - ${selection.subUnit || ''}. The problem should include a question, four options (A, B, C, D), and the correct answer. The output must be a JSON object with keys "question", "options" (an array of strings), and "answer".`;
-    
+    const prompt = `Create 5 unique multiple-choice math problems based on the following topic: ${selection.unit} - ${selection.subUnit || ''}. 
+    The output must be a single JSON object with a key "problems", which is an array of 5 problem objects. 
+    Each problem object must have keys "question", "options" (an array of 4 strings), and "answer".`;
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    const jsonMatch = text.match(/```json([\s\S]*?)```/);
-    const jsonString = jsonMatch ? jsonMatch[1].trim() : text.trim();
+    // 3. Validate the response
+    let batch;
+    try {
+      const jsonMatch = text.match(/```json([\s\S]*?)```/);
+      const jsonString = jsonMatch ? jsonMatch[1].trim() : text.trim();
+      batch = JSON.parse(jsonString);
+    } catch (e) {
+      throw new Error("Invalid JSON response from AI.");
+    }
     
-    const problem = JSON.parse(jsonString);
-    res.json(problem);
+    if (!batch || !Array.isArray(batch.problems) || batch.problems.length === 0) {
+      throw new Error("Invalid batch structure from AI.");
+    }
+
+    // 4. Serve one problem and cache the rest
+    const problemToServe = batch.problems.pop();
+    if (batch.problems.length > 0) {
+      console.log(`[Cache] Caching ${batch.problems.length} new problems for key: ${cacheKey}`);
+      problemCache.set(cacheKey, {
+        problems: batch.problems,
+        timestamp: Date.now()
+      });
+    }
+    
+    res.json(problemToServe);
 
   } catch (error) {
     console.error('Error generating problem with Google API:', error);
@@ -72,7 +114,7 @@ app.post('/api/generate', async (req, res) => {
       });
     } else {
       // For all other errors, send a generic 500
-      res.status(500).json({ error: '문제를 생성하는 데 실패했습니다. 다시 시도해주세요.' });
+      res.status(500).json({ error: '문제 묶음을 생성하는 데 실패했습니다. AI가 응답 형식을 지키지 않았을 수 있습니다. 잠시 후 다시 시도해주세요.' });
     }
   }
 });
