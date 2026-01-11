@@ -49,13 +49,13 @@ function App() {
     addMessageToChat({ sender: 'user', text: `숙제 문제: ${homeworkProblemInput}` });
     addMessageToChat({ sender: 'system', text: '숙제 문제에 대한 해설을 생성하고 있습니다...' });
 
-    const explanation = await generateExplanationForHomework(homeworkProblemInput);
+    const result = await generateExplanationForHomework(homeworkProblemInput);
     setIsLoading(false);
 
-    if (explanation) {
-      addMessageToChat({ sender: 'ai', text: `[숙제 해설]\n${explanation}` });
-    } else {
-      addMessageToChat({ sender: 'system', text: '숙제 해설 생성에 실패했습니다. 다시 시도해주세요.' });
+    if (result.explanation) {
+      addMessageToChat({ sender: 'ai', text: `[숙제 해설]\n${result.explanation}` });
+    } else if (result.error) {
+      addMessageToChat({ sender: 'system', text: result.error });
     }
 
     setHomeworkProblemInput('');
@@ -105,10 +105,6 @@ function App() {
   };
 
   const handleRequestProblem = async () => {
-    if (!selection.unit) {
-      addMessageToChat({ sender: 'system', text: '모든 과정을 선택해야 문제를 생성할 수 있습니다.'});
-      return;
-    }
     setIsLoading(true);
     
     const systemMessage = selection.subUnit
@@ -116,14 +112,14 @@ function App() {
       : `'${selection.unit}' 단원에 대한 문제를 생성하고 있습니다...`;
     addMessageToChat({ sender: 'system', text: systemMessage });
     
-    const problem = await generateProblem(selection);
+    const result = await generateProblem(selection);
     setIsLoading(false);
     
-    if (problem) {
-      setCurrentProblem(problem);
-      addMessageToChat({ sender: 'ai', text: problem.question });
-    } else {
-      addMessageToChat({ sender: 'system', text: '문제를 생성하는 데 실패했습니다. 다시 시도해주세요.'});
+    if (result.problem) {
+      setCurrentProblem(result.problem);
+      addMessageToChat({ sender: 'ai', text: result.problem.question });
+    } else if (result.error) {
+      addMessageToChat({ sender: 'system', text: result.error });
     }
   };
 

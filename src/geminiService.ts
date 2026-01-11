@@ -9,9 +9,9 @@ export interface Problem {
   answer: string;
 }
 
-export async function generateProblem(selection: Selection): Promise<Problem | null> {
+export async function generateProblem(selection: Selection): Promise<{ problem?: Problem; error?: string }> {
   if (!selection.school || !selection.grade || !selection.semester || !selection.unit) {
-    return null;
+    return { error: '모든 학습 과정을 선택해야 문제를 생성할 수 있습니다.' };
   }
 
   try {
@@ -26,20 +26,20 @@ export async function generateProblem(selection: Selection): Promise<Problem | n
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error from server:", errorData.error);
-      throw new Error(`Server responded with ${response.status}`);
+      return { error: errorData.error || `서버 응답 오류: ${response.status}` };
     }
 
     const problem: Problem = await response.json();
-    return problem;
+    return { problem };
   } catch (error) {
     console.error("Error generating problem:", error);
-    return null;
+    return { error: '문제 생성 중 예기치 않은 오류가 발생했습니다.' };
   }
 }
 
-export async function generateExplanationForHomework(problem: string): Promise<string | null> {
+export async function generateExplanationForHomework(problem: string): Promise<{ explanation?: string; error?: string }> {
   if (!problem.trim()) {
-    return null;
+    return { error: '해설을 요청할 숙제 문제를 입력해주세요.' };
   }
 
   try {
@@ -54,14 +54,14 @@ export async function generateExplanationForHomework(problem: string): Promise<s
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error from server:", errorData.error);
-      throw new Error(`Server responded with ${response.status}`);
+      return { error: errorData.error || `서버 응답 오류: ${response.status}` };
     }
 
     const data: { explanation: string } = await response.json();
-    return data.explanation;
+    return { explanation: data.explanation };
   } catch (error) {
     console.error("Error generating explanation for homework:", error);
-    return null;
+    return { error: '숙제 해설 생성 중 예기치 않은 오류가 발생했습니다.' };
   }
 }
 

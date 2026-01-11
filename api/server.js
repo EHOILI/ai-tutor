@@ -64,7 +64,16 @@ app.post('/api/generate', async (req, res) => {
 
   } catch (error) {
     console.error('Error generating problem with Google API:', error);
-    res.status(500).json({ error: 'Failed to generate problem.' });
+
+    // Check if this is a rate limit error (status 429)
+    if (error.status === 429) {
+      res.status(429).json({ 
+        error: '현재 많은 사용자가 몰려 답변 생성이 지연되고 있습니다. 잠시 후 다시 시도해주세요.' 
+      });
+    } else {
+      // For all other errors, send a generic 500
+      res.status(500).json({ error: '문제를 생성하는 데 실패했습니다. 다시 시도해주세요.' });
+    }
   }
 });
 
@@ -88,7 +97,16 @@ app.post('/api/explain', async (req, res) => {
 
     } catch (error) {
         console.error('Error generating explanation with Google API:', error);
-        res.status(500).json({ error: 'Failed to generate explanation.' });
+        
+        // Check if this is a rate limit error (status 429)
+        if (error.status === 429) {
+          res.status(429).json({ 
+            error: '현재 많은 사용자가 몰려 답변 생성이 지연되고 있습니다. 잠시 후 다시 시도해주세요.' 
+          });
+        } else {
+          // For all other errors, send a generic 500
+          res.status(500).json({ error: '해설을 생성하는 데 실패했습니다. 다시 시도해주세요.' });
+        }
     }
 });
 
