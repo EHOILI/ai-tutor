@@ -10,6 +10,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173', // Vite 개발 서버
   'https://ehoili.github.io', // GitHub Pages 배포
+  'https://ai-tutor-sigma.vercel.app', // Vercel frontend deployment
   // Vercel 배포 시에는 process.env.VERCEL_URL이 자동으로 설정됩니다.
   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
 ].filter(Boolean); // undefined 값을 제거합니다.
